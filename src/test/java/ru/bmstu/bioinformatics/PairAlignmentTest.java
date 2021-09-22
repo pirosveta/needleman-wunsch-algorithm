@@ -32,14 +32,14 @@ public class PairAlignmentTest {
         this.optimization = optimization;
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void test1() {
         Main.main(new String[]{"-i", firstSequencePath, secondSequencePath,
                 "-a", alphabet,
                 "-g", gapPenalty});
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void test2() {
         Main.main(new String[]{"-i", firstSequencePath, secondSequencePath,
                 "-a", alphabet,
