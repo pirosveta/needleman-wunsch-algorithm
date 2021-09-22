@@ -21,8 +21,14 @@ public class Main {
     @Parameter(names = "-o", description = "Path to output file")
     private static String outputPath = "";
 
-    @Parameter(names = "-optimization", description = "Enable optimization")
+    @Parameter(names = "-optimization", arity = 1, description = "Enable optimization")
     private static boolean optimization = false;
+
+    private static final String DNA_FULL = "DNAFull", BLOSUM_62 = "BLOSUM62", DEFAULT = "Default", EMPTY = "";
+    private static final int MATCH_DNA_FULL = 5, MISMATCH_DNA_FULL = -4,
+            INDEL_DEFAULT = -2, MATCH_DEFAULT = 1, MISMATCH_DEFAULT = -1,
+            NUMBER_OF_SEQUENCES = 2, FIRST_SEQUENCE_INDEX = 0, SECOND_SEQUENCE_INDEX = 1,
+            EXIT_CODE_WITH_ERROR = 1;
 
     public static ArrayList<String> readFile() {
         ArrayList<String> sequences = new ArrayList<>();
@@ -42,7 +48,7 @@ public class Main {
                 bufferedReader.close();
             } catch (IOException e) {
                 e.printStackTrace();
-                System.exit(1);
+                System.exit(EXIT_CODE_WITH_ERROR);
             }
         }
 
@@ -52,13 +58,11 @@ public class Main {
     private static ScoringFunction defineScoringFunction() {
         ScoringFunction scoringFunction;
 
-        if (alphabet.equals("DNAFull")) {
-            scoringFunction = new DNAFull(Integer.parseInt(gapPenalty), 5, -4);
-        }
-        else if (alphabet.equals("BLOSUM62")) {
+        if (alphabet.equals(DNA_FULL)) {
+            scoringFunction = new DNAFull(Integer.parseInt(gapPenalty), MATCH_DNA_FULL, MISMATCH_DNA_FULL);
+        } else if (alphabet.equals(BLOSUM_62)) {
             scoringFunction = new BLOSUM62(Integer.parseInt(gapPenalty));
-        }
-        else scoringFunction = new Default(2, 1, -1);
+        } else scoringFunction = new Default(INDEL_DEFAULT, MATCH_DEFAULT, MISMATCH_DEFAULT);
 
         return scoringFunction;
     }
@@ -69,22 +73,22 @@ public class Main {
             JCommander jCommander = new JCommander(main);
             jCommander.parse(args);
 
-            if (inputPaths.size() != 2
-                    || !(alphabet.equals("BLOSUM62") || alphabet.equals("DNAFull") || alphabet.equals("Default"))
-                    || (!alphabet.equals("Default") && gapPenalty.equals(""))) {
+            if (inputPaths.size() != NUMBER_OF_SEQUENCES
+                    || !(alphabet.equals(BLOSUM_62) || alphabet.equals(DNA_FULL) || alphabet.equals(DEFAULT))
+                    || (!alphabet.equals(DEFAULT) && gapPenalty.equals(EMPTY))) {
                 jCommander.usage();
                 return;
             }
 
             ArrayList<String> sequences = readFile();
             PairAlignment pairAlignment = new PairAlignment(
-                    sequences.get(0),
-                    sequences.get(1),
+                    sequences.get(FIRST_SEQUENCE_INDEX),
+                    sequences.get(SECOND_SEQUENCE_INDEX),
                     defineScoringFunction(),
                     optimization);
 
             PrintStream console = System.out;
-            if (!outputPath.equals("")) {
+            if (!outputPath.equals(EMPTY)) {
                 File file = new File(outputPath);
                 FileOutputStream fos = new FileOutputStream(file);
                 PrintStream ps = new PrintStream(fos);

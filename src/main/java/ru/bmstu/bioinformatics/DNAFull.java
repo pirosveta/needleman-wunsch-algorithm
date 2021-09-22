@@ -1,7 +1,5 @@
 package ru.bmstu.bioinformatics;
 
-import ru.bmstu.bioinformatics.ScoringFunction;
-
 public class DNAFull implements ScoringFunction {
     private int indel;
     private int match;

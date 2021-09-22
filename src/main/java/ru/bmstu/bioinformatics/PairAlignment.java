@@ -3,7 +3,10 @@ package ru.bmstu.bioinformatics;
 import java.util.Arrays;
 
 public class PairAlignment {
+    private final String OUTPUT_SEQUENCE_1 = "Seq1: ", OUTPUT_SEQUENCE_2 = "Seq2: ", OUTPUT_SCORE = "Score: ",
+            NEXT_LINE = "\n";
     private final char GAP = '_';
+    private final int ZERO = 0, GAP_INDEX = 0, ONE = 1, FIRST_INDEX = 1, NUMBER_OF_SYMBOLS_IN_LINE = 50;
 
     private Cell[][] matrix;
     private String firstSequence,
@@ -61,14 +64,14 @@ public class PairAlignment {
                 maximum = matrix[lineMaximum][columnMaximum].getValue(),
                 currentMaximum;
 
-        for (int columnIndex = 1; columnIndex <= columnSize; columnIndex++) {
+        for (int columnIndex = FIRST_INDEX; columnIndex <= columnSize; columnIndex++) {
             currentMaximum = matrix[lineSize][columnIndex].getValue();
             if (currentMaximum > maximum) {
                 columnMaximum = columnIndex;
                 maximum = currentMaximum;
             }
         }
-        for (int lineIndex = 1; lineIndex <= lineSize; lineIndex++) {
+        for (int lineIndex = FIRST_INDEX; lineIndex <= lineSize; lineIndex++) {
             currentMaximum = matrix[lineIndex][columnSize].getValue();
             if (currentMaximum > maximum) {
                 lineMaximum = lineIndex;
@@ -87,81 +90,81 @@ public class PairAlignment {
     }
 
     private int checkMatch(int lineIndex, int columnIndex) {
-        char firstChar = firstSequence.charAt(columnIndex - 1),
-                secondChar = secondSequence.charAt(lineIndex - 1);
+        char firstChar = firstSequence.charAt(columnIndex - ONE),
+                secondChar = secondSequence.charAt(lineIndex - ONE);
         if (firstChar == secondChar) {
             return getMatch(firstChar, secondChar);
         } else return getMismatch(firstChar, secondChar);
     }
 
     private void fillGapCells() {
-        matrix[0][0] = new Cell(null, PredecessorType.NULL, GAP, GAP, 0);
+        matrix[GAP_INDEX][GAP_INDEX] = new Cell(null, PredecessorType.NULL, GAP, GAP, ZERO);
 
-        for (int columnIndex = 1; columnIndex < matrix[0].length; columnIndex++) {
+        for (int columnIndex = FIRST_INDEX; columnIndex < matrix[GAP_INDEX].length; columnIndex++) {
             int value = optimization
-                    ? 0
+                    ? ZERO
                     : getIndel() * columnIndex;
-            matrix[0][columnIndex] = new Cell(
-                    matrix[0][columnIndex - 1],
+            matrix[GAP_INDEX][columnIndex] = new Cell(
+                    matrix[GAP_INDEX][columnIndex - ONE],
                     PredecessorType.LEFT,
-                    firstSequence.charAt(columnIndex - 1),
+                    firstSequence.charAt(columnIndex - ONE),
                     GAP,
                     value);
         }
-        for (int lineIndex = 1; lineIndex < matrix.length; lineIndex++) {
+        for (int lineIndex = FIRST_INDEX; lineIndex < matrix.length; lineIndex++) {
             int value = optimization
-                    ? 0
+                    ? ZERO
                     : getIndel() * lineIndex;
-            matrix[lineIndex][0] = new Cell(
-                    matrix[lineIndex - 1][0],
+            matrix[lineIndex][GAP_INDEX] = new Cell(
+                    matrix[lineIndex - ONE][GAP_INDEX],
                     PredecessorType.UP,
                     GAP,
-                    secondSequence.charAt(lineIndex - 1),
+                    secondSequence.charAt(lineIndex - ONE),
                     value);
         }
     }
 
     private void fillScoringMatrix() {
-        for (int lineIndex = 1; lineIndex < matrix.length; lineIndex++) {
-            for (int columnIndex = 1; columnIndex < matrix[0].length; columnIndex++) {
-                int currentMaximum = matrix[lineIndex - 1][columnIndex - 1].getValue()
+        for (int lineIndex = FIRST_INDEX; lineIndex < matrix.length; lineIndex++) {
+            for (int columnIndex = FIRST_INDEX; columnIndex < matrix[GAP_INDEX].length; columnIndex++) {
+                int currentMaximum = matrix[lineIndex - ONE][columnIndex - ONE].getValue()
                         + checkMatch(lineIndex, columnIndex);
                 PredecessorType currentType = PredecessorType.DIAG;
 
                 if (matrix[lineIndex - 1][columnIndex].getValue() + getIndel() > currentMaximum) {
-                    currentMaximum = matrix[lineIndex - 1][columnIndex].getValue() + getIndel();
+                    currentMaximum = matrix[lineIndex - ONE][columnIndex].getValue() + getIndel();
                     currentType = PredecessorType.UP;
                 }
-                if (matrix[lineIndex][columnIndex - 1].getValue() + getIndel() > currentMaximum) {
-                    currentMaximum = matrix[lineIndex][columnIndex - 1].getValue() + getIndel();
+                if (matrix[lineIndex][columnIndex - ONE].getValue() + getIndel() > currentMaximum) {
+                    currentMaximum = matrix[lineIndex][columnIndex - ONE].getValue() + getIndel();
                     currentType = PredecessorType.LEFT;
                 }
 
                 Cell predecessorCell = null;
                 switch (currentType) {
                     case LEFT:
-                        predecessorCell = matrix[lineIndex][columnIndex - 1];
+                        predecessorCell = matrix[lineIndex][columnIndex - ONE];
                         break;
                     case DIAG:
-                        predecessorCell = matrix[lineIndex - 1][columnIndex - 1];
+                        predecessorCell = matrix[lineIndex - ONE][columnIndex - ONE];
                         break;
                     case UP:
-                        predecessorCell = matrix[lineIndex - 1][columnIndex];
+                        predecessorCell = matrix[lineIndex - ONE][columnIndex];
                         break;
                 }
 
                 matrix[lineIndex][columnIndex] = new Cell(
                         predecessorCell,
                         currentType,
-                        firstSequence.charAt(columnIndex - 1),
-                        secondSequence.charAt(lineIndex - 1),
+                        firstSequence.charAt(columnIndex - ONE),
+                        secondSequence.charAt(lineIndex - ONE),
                         currentMaximum);
             }
         }
     }
 
     private void align() {
-        matrix = new Cell[secondSequence.length() + 1][firstSequence.length() + 1];
+        matrix = new Cell[secondSequence.length() + ONE][firstSequence.length() + ONE];
 
         fillGapCells();
         fillScoringMatrix();
@@ -188,17 +191,34 @@ public class PairAlignment {
     @Override
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
-        int i = 1;
-        for (; i < Math.ceil(firstAlignSequence.length() / 50.0); i++) {
-            stringBuilder.append("Seq1: " + firstAlignSequence.substring(50 * (i - 1), 50 * i) + "\n");
-            stringBuilder.append("Seq2: " + secondAlignSequence.substring(50 * (i - 1), 50 * i) + "\n");
-            stringBuilder.append("\n");
-        }
-        stringBuilder.append("Seq1: " + firstAlignSequence.substring(50 * (i - 1)) + "\n");
-        stringBuilder.append("Seq2: " + secondAlignSequence.substring(50 * (i - 1)) + "\n");
-        stringBuilder.append("\n");
+        int i = FIRST_INDEX;
+        for (; i < Math.ceil((double) firstAlignSequence.length() / NUMBER_OF_SYMBOLS_IN_LINE); i++) {
+            stringBuilder.append(OUTPUT_SEQUENCE_1);
+            stringBuilder.append(firstAlignSequence.substring(
+                    NUMBER_OF_SYMBOLS_IN_LINE * (i - ONE),
+                    NUMBER_OF_SYMBOLS_IN_LINE * i));
+            stringBuilder.append(NEXT_LINE);
 
-        stringBuilder.append("Score: " + score);
+            stringBuilder.append(OUTPUT_SEQUENCE_2);
+            stringBuilder.append(secondAlignSequence.substring(
+                    NUMBER_OF_SYMBOLS_IN_LINE * (i - ONE),
+                    NUMBER_OF_SYMBOLS_IN_LINE * i));
+            stringBuilder.append(NEXT_LINE);
+            stringBuilder.append(NEXT_LINE);
+        }
+
+        stringBuilder.append(OUTPUT_SEQUENCE_1);
+        stringBuilder.append(firstAlignSequence.substring(NUMBER_OF_SYMBOLS_IN_LINE * (i - ONE)));
+        stringBuilder.append(NEXT_LINE);
+
+        stringBuilder.append(OUTPUT_SEQUENCE_2);
+        stringBuilder.append(secondAlignSequence.substring(NUMBER_OF_SYMBOLS_IN_LINE * (i - ONE)));
+        stringBuilder.append(NEXT_LINE);
+        stringBuilder.append(NEXT_LINE);
+
+        stringBuilder.append(OUTPUT_SCORE);
+        stringBuilder.append(score);
+
         return stringBuilder.toString();
     }
 }

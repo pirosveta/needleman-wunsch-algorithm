@@ -3,10 +3,14 @@ package ru.bmstu.bioinformatics;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.*;
-import java.util.stream.Stream;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class BLOSUM62 implements ScoringFunction {
+    private final String BLOSUM_62_MATRIX_PATH = "BLOSUM62.dat", EMPTY = "", SPACE_REGEX = "\\s+";
+    private final int NULL_DELTA = 0, SINGLE_DELTA = 1, START_CHARACTER_ORDER = 0,
+            FIRST_ALPHABET_ELEMENT = 0, FIRST_INDEX = 1, CHARACTER_INDEX = 0, EXIT_CODE_WITH_ERROR = 1;
+
     private int indel;
 
     private HashMap<Character, Integer> orderInMatrix = new HashMap<>();
@@ -14,21 +18,21 @@ public class BLOSUM62 implements ScoringFunction {
 
     private void initializeMatrix() {
         try {
-            BufferedReader bufferedReader = new BufferedReader(new FileReader("BLOSUM62.dat"));
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(BLOSUM_62_MATRIX_PATH));
 
             String line = bufferedReader.readLine();
-            String[] alphabet = line.split("\\s+");
-            int delta = 0;
-            if (alphabet[0].equals(""))
-                delta = 1;
+            String[] alphabet = line.split(SPACE_REGEX);
+            int delta = NULL_DELTA;
+            if (alphabet[FIRST_ALPHABET_ELEMENT].equals(EMPTY))
+                delta = SINGLE_DELTA;
 
-            for (int order = 0 + delta; order < alphabet.length; order++) {
-                orderInMatrix.put(alphabet[order].charAt(0), order - delta);
+            for (int order = START_CHARACTER_ORDER + delta; order < alphabet.length; order++) {
+                orderInMatrix.put(alphabet[order].charAt(CHARACTER_INDEX), order - delta);
             }
             while ((line = bufferedReader.readLine()) != null) {
-                String[] splitLine = line.split("\\s+");
+                String[] splitLine = line.split(SPACE_REGEX);
                 ArrayList<Integer> scores = new ArrayList<>();
-                for (int index = 1; index < splitLine.length; index++) {
+                for (int index = FIRST_INDEX; index < splitLine.length; index++) {
                     scores.add(Integer.parseInt(splitLine[index]));
                 }
                 matrix.add(scores);
@@ -37,7 +41,7 @@ public class BLOSUM62 implements ScoringFunction {
             bufferedReader.close();
         } catch (IOException e) {
             e.printStackTrace();
-            System.exit(1);
+            System.exit(EXIT_CODE_WITH_ERROR);
         }
     }
 

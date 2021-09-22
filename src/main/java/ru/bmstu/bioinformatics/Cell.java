@@ -2,6 +2,7 @@ package ru.bmstu.bioinformatics;
 
 public class Cell {
     private final char GAP = '_';
+    private final int BEGIN = 0;
 
     private Cell predecessor;
     private PredecessorType predecessorType;
@@ -24,16 +25,16 @@ public class Cell {
         if (predecessor != null) {
             switch (predecessorType) {
                 case LEFT:
-                    firstSequence.insert(0, inFirstSequence);
-                    secondSequence.insert(0, GAP);
+                    firstSequence.insert(BEGIN, inFirstSequence);
+                    secondSequence.insert(BEGIN, GAP);
                     break;
                 case DIAG:
-                    firstSequence.insert(0, inFirstSequence);
-                    secondSequence.insert(0, inSecondSequence);
+                    firstSequence.insert(BEGIN, inFirstSequence);
+                    secondSequence.insert(BEGIN, inSecondSequence);
                     break;
                 case UP:
-                    firstSequence.insert(0, GAP);
-                    secondSequence.insert(0, inSecondSequence);
+                    firstSequence.insert(BEGIN, GAP);
+                    secondSequence.insert(BEGIN, inSecondSequence);
                     break;
             }
         }
